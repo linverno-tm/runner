@@ -1,156 +1,150 @@
-<div align="center">
+<h1 align="center">Deep Purple Runner</h1>
 
-# Deep Purple Runner
-### Neon Glassmorphism Endless Runner built with Flutter + Flame
+<p align="center">
+  Neon glassmorphism endless runner built with <b>Flutter</b> + <b>Flame</b>
+</p>
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
-[![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
-[![Flame](https://img.shields.io/badge/Flame-1.35.1-6A1B9A?style=for-the-badge)](https://pub.dev/packages/flame)
-[![License](https://img.shields.io/badge/License-MIT-111111?style=for-the-badge)](LICENSE)
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white" />
+  <img src="https://img.shields.io/badge/Flame-FF6B35?style=flat-square&logo=flame&logoColor=white" />
+  <img src="https://img.shields.io/badge/platforms-Android%20%7C%20iOS%20%7C%20Web-0468D7?style=flat-square" />
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
+</p>
 
-</div>
+<p align="center">
+  <a href="https://github.com/linverno-tm/runner/actions/workflows/flutter_ci.yml">
+    <img src="https://github.com/linverno-tm/runner/actions/workflows/flutter_ci.yml/badge.svg" alt="CI" />
+  </a>
+</p>
 
 ---
 
 ## Overview
-**Deep Purple Runner** is a stylish endless runner prototype focused on:
-- smooth gameplay loop,
-- modern neon + glassmorphism visuals,
-- responsive behavior for mobile and web,
-- clean modular architecture inside Flame components.
 
-The player jumps over incoming obstacles. Speed and challenge scale over time. One collision ends the run.
+Tap to jump, survive as long as you can. Speed ramps up over time and one
+collision ends the run. The whole thing is built around a small, testable core:
+the game owns run state, components own their own physics and rendering, and
+the Flutter overlays read from the same palette the canvas draws with.
 
----
+**Highlights**
 
-## Visual Direction
-- **Style:** Glow + Glassmorphism
-- **Mood:** Sci-fi night / cosmic depth
-- **Primary Palette:**
-  - `#0F0C29` -> `#302B63` (background gradient)
-  - `#673AB7` / `#7E57C2` (primary)
-  - `#BD00FF` (neon glow)
-- **UI Language:** Cupertino-inspired minimal surfaces with blur and rounded corners
+- Physics-driven jump with asymmetric gravity — falling is heavier than rising,
+  so the arc feels responsive instead of floaty
+- Difficulty curve that scales both world speed and spawn cadence, with jitter
+  so the rhythm cannot be memorised
+- Persistent high score, pause/resume, and two palettes (Neon Glow / Pastel)
+- Frosted glass HUD and modals that scale from phone to desktop web
+- 24 tests covering layout, jump physics, difficulty progression, pause,
+  game-over/restart and high-score persistence
 
----
+## Visual direction
 
-## Core Features
-- Modular Flame game structure:
-  - `DeepPurpleRunnerGame` (GameClass)
-  - `PlayerComponent`
-  - `ObstacleComponent`
-  - `GradientBackgroundComponent`
-- Physics-driven jump system:
-  - gravity
-  - tap-to-jump
-  - grounded-state logic
-- Collision detection with `RectangleHitbox`
-- Collision particle burst effect
-- Dynamic score system with pulse animation
-- Custom Neon/Pastel mode toggle
-- iOS-style glass HUD and Game Over modal
-- Fully responsive scaling for web + mobile
+| | |
+|---|---|
+| **Style** | Neon glow + glassmorphism |
+| **Mood** | Sci-fi night, cosmic depth |
+| **Background** | `#0F0C29` → `#302B63` |
+| **Primary** | `#673AB7` / `#7E57C2` |
+| **Neon accent** | `#BD00FF` |
+| **Type** | Orbitron (HUD), Press Start 2P (titles) |
 
----
+Pastel mode keeps the same layout on a light, low-contrast ramp.
 
-## Project Structure
-```text
+## Architecture
+
+```
 lib/
-  main.dart
+├── main.dart                    # entry point
+├── app.dart                     # CupertinoApp + GameWidget + overlay wiring
+│
+├── theme/
+│   └── app_palette.dart         # the two palettes, shared by canvas and UI
+│
+├── game/
+│   ├── deep_purple_runner_game.dart   # run state, spawning, scoring
+│   ├── game_config.dart               # every tuning constant, in one place
+│   └── components/
+│       ├── player_component.dart          # gravity, jump, landing, collision
+│       ├── obstacle_component.dart        # scroll, oscillate, self-cull
+│       └── gradient_background_component.dart
+│
+├── services/
+│   └── high_score_store.dart    # interface + SharedPreferences and fake impls
+│
+└── ui/
+    ├── overlays/
+    │   ├── hud_overlay.dart         # score, best, pause, palette toggle
+    │   ├── pause_overlay.dart
+    │   └── game_over_overlay.dart
+    └── widgets/
+        ├── glass_card.dart          # the frosted surface every overlay uses
+        ├── glass_floor.dart
+        └── mode_toggle.dart
 ```
 
-> Note: This prototype is intentionally delivered in a single `main.dart` file while still keeping component-level separation in code.
+Three ideas hold this together:
 
----
+**Tuning is data, not code.** Every constant that shapes the feel of the game
+lives in `GameConfig`. The difficulty curve is reviewable without reading the
+game loop, and tests assert against named constants rather than magic numbers.
 
-## Tech Stack
-- **Flutter** (UI shell, overlays, responsive layout)
-- **Flame Engine** (game loop, components, collision)
-- **flutter_glow** (neon glow UI widgets)
-- **animate_do** (UI entrance micro-animations)
-- **google_fonts** (Orbitron / Press Start 2P)
+**One palette, two renderers.** Flame components and Flutter overlays both read
+`DeepPurpleRunnerGame.palette`, so switching modes can never leave the canvas
+and the chrome disagreeing.
 
----
+**Storage behind an interface.** `HighScoreStore` has a `SharedPreferences`
+implementation for the app and an in-memory one for tests, so the game is
+testable without platform channels.
 
-## Getting Started
-### 1) Clone
+## Getting started
+
 ```bash
-git clone https://github.com/<your-username>/deep-purple-runner.git
-cd deep-purple-runner
-```
-
-### 2) Install dependencies
-```bash
+git clone https://github.com/linverno-tm/runner.git
+cd runner
 flutter pub get
 ```
 
-### 3) Run
-```bash
-flutter run
-```
+Run it:
 
-### Web run
 ```bash
-flutter run -d chrome
+flutter run              # connected device or emulator
+flutter run -d chrome    # web
 ```
-
----
 
 ## Controls
-- **Tap / Click**: Jump
-- **Avoid obstacles**: Survive as long as possible
-- **Game Over modal**: Press `Restart` to play again
 
----
+| Input | Action |
+|---|---|
+| Tap / click | Jump (ignored while airborne — no double jump) |
+| Pause button | Freeze the run, then Resume or Restart |
+| Neon / Pastel toggle | Switch palette live |
 
-## Gameplay Notes
-- Difficulty scales with speed increase.
-- Obstacle timing is randomized within tuned boundaries.
-- Score increases over survival time.
+## Tests
 
----
-
-## Screenshots / Preview
-Add your visuals for stronger GitHub presentation:
-
-```text
-assets/readme/cover.png
-assets/readme/gameplay.gif
+```bash
+flutter analyze
+flutter test
 ```
 
-Then embed:
+The suite drives the real game loop rather than mocking it:
 
-```md
-<p align="center">
-  <img src="assets/readme/cover.png" width="900" alt="Deep Purple Runner cover" />
-</p>
+- **layout** — ground line derived from the viewport, player anchored to it
+- **jumping** — impulse applied, double jump rejected, landing restores state
+- **run progression** — score accrues, world speed clamps, obstacles spawn
+- **pause** — score frozen while paused, resumes cleanly, no-op after game over
+- **game over / restart** — overlay shown, world cleared, second hit ignored
+- **high score** — restored on load, better runs persisted, worse runs ignored
 
-<p align="center">
-  <img src="assets/readme/gameplay.gif" width="900" alt="Deep Purple Runner gameplay" />
-</p>
-```
-
----
+CI runs analyze, the full suite, a release web build and a debug APK build on
+every push.
 
 ## Roadmap
-- sound effects + background music
-- collectible boosts
-- pause/resume system
-- leaderboard integration
-- persistent high score storage
 
----
-
-## Contribution
-PRs and issue reports are welcome.
-
-If you want to contribute:
-1. Fork repository
-2. Create branch: `feature/your-feature-name`
-3. Commit and push
-4. Open Pull Request
-
----
+- [ ] Sound effects and background music
+- [ ] Collectible boosts
+- [ ] Online leaderboard
+- [ ] Additional obstacle types
 
 ## License
-MIT License. You can use, modify, and distribute this project freely.
+
+MIT — see [LICENSE](LICENSE).
